@@ -10,6 +10,7 @@ import { getTasksByProject, createTask } from '../controllers/task.controller.js
 import { inviteUser, removeMember } from '../controllers/invitation.controller.js';
 import { getProjectFiles, uploadFile } from '../controllers/file.controller.js';
 import { upload } from '../config/multer.js';
+import { getMessages, postMessage } from '../controllers/message.controller.js';
 import { protect } from '../middleware/auth.middleware.js';
 
 const router = Router();
@@ -44,5 +45,12 @@ router.get('/:projectId/files', getProjectFiles);
 
 // POST /api/projects/:projectId/files  — upload a file (members only)
 router.post('/:projectId/files', upload.single('file'), uploadFile);
+
+// ── Message routes ────────────────────────────────────────────────────────────
+// GET  /api/projects/:projectId/messages             — paginated chat history
+router.get('/:projectId/messages', getMessages);
+
+// POST /api/projects/:projectId/messages             — send a message via REST
+router.post('/:projectId/messages', postMessage);
 
 export default router;

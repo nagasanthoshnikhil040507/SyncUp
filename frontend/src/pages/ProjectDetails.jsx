@@ -515,6 +515,24 @@ const ProjectDetails = () => {
         </div>
       </Section>
 
+      {/* ── Chat section ── */}
+      <Section icon="💬" title="Chat">
+        <div className="flex flex-col items-center justify-center py-8 text-center gap-3">
+          <span className="text-5xl">💬</span>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
+            Real-time messaging with your project team.
+          </p>
+          <Link
+            id="open-chat-btn"
+            to={`/projects/${projectId}/chat`}
+            className="mt-1 inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700
+              text-white px-5 py-2.5 rounded-lg font-medium transition-colors text-sm"
+          >
+            Open Chat →
+          </Link>
+        </div>
+      </Section>
+
       {/* ── Activity section (placeholder) ── */}
       <Section icon="🔔" title="Activity">
         <div className="flex flex-col items-center justify-center py-10 text-center gap-3">

@@ -10,6 +10,7 @@ import CreateProject from '../pages/CreateProject';
 import ProjectDetails from '../pages/ProjectDetails';
 import Tasks from '../pages/Tasks';
 import ProjectFiles from '../pages/ProjectFiles';
+import ProjectChat from '../pages/ProjectChat';
 import Invitations from '../pages/Invitations';
 import Profile from '../pages/Profile';
 import Settings from '../pages/Settings';
@@ -43,6 +44,7 @@ const AppRouter = () => {
             <Route path="/projects/:projectId" element={<ProjectDetails />} />
             <Route path="/projects/:projectId/tasks" element={<Tasks />} />
             <Route path="/projects/:projectId/files" element={<ProjectFiles />} />
+            <Route path="/projects/:projectId/chat" element={<ProjectChat />} />
             <Route path="/invitations" element={<Invitations />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/settings" element={<Settings />} />
