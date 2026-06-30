@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect, useContext } from 'react';
 import axiosInstance from '../api/axiosInstance';
+import { destroySocket } from '../socket/socketClient';
 
 export const AuthContext = createContext();
 
@@ -40,6 +41,11 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     setToken(null);
     setUser(null);
+    // Kill the socket so the next user gets a fresh connection authenticated
+    // with their own token. Without this, the singleton retains the previous
+    // user's socket.user on the server, causing messages to be attributed to
+    // the wrong sender.
+    destroySocket();
   };
 
   return (

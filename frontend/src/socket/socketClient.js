@@ -18,16 +18,23 @@ const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
 let socketInstance = null;
 
 export const getSocket = () => {
+  // If the instance exists but is already disconnected (e.g. server restarted
+  // while logged out, or destroySocket() was not called), kill it so we create
+  // a fresh socket with the current user's token.
+  if (socketInstance && !socketInstance.connected && !socketInstance.active) {
+    socketInstance.disconnect();
+    socketInstance = null;
+  }
+
   if (!socketInstance) {
-    const token = localStorage.getItem('token');
     socketInstance = io(SOCKET_URL, {
-      auth: { token },
-      // Reconnect automatically with exponential back-off
-      reconnection:        true,
+      // Use a callback so the token is re-read from localStorage on every
+      // connection attempt — including automatic reconnects after a drop.
+      auth: (cb) => cb({ token: localStorage.getItem('token') }),
+      reconnection:         true,
       reconnectionAttempts: Infinity,
-      reconnectionDelay:   1000,
+      reconnectionDelay:    1000,
       reconnectionDelayMax: 10000,
-      // Only connect when explicitly told to (lazy connect)
       autoConnect: true,
     });
   }

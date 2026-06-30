@@ -33,6 +33,19 @@ const getAvatarColor = (str = '') => {
   return avatarColors[Math.abs(h) % avatarColors.length];
 };
 
+// ── normaliseMsg ──────────────────────────────────────────────────────────────
+// Guarantees that every message object — whether from the REST history endpoint
+// (plain JSON) or from a Socket.IO event (Mongoose doc serialised by socket.io)
+// — has _id and sender._id as plain strings.
+// Without this, Mongoose ObjectId instances slip through and break ===  comparisons.
+const normaliseMsg = (msg) => ({
+  ...msg,
+  _id:    String(msg._id    ?? ''),
+  sender: msg.sender
+    ? { ...msg.sender, _id: String(msg.sender._id ?? '') }
+    : null,
+});
+
 // Group messages by date so we can render "Today", "Yesterday", etc.
 const groupByDate = (messages) => {
   const groups = [];
@@ -43,10 +56,12 @@ const groupByDate = (messages) => {
       groups.push({ type: 'date-divider', label: dateStr, id: `date-${msg.createdAt}` });
       lastDateStr = dateStr;
     }
-    groups.push({ type: 'message', ...msg });
+    // Store the message directly — no extra nesting needed
+    groups.push({ _groupType: 'message', _ref: msg });
   }
   return groups;
 };
+
 
 // ── Animation variants ────────────────────────────────────────────────────────
 const msgVariants = {
@@ -383,7 +398,8 @@ const ProjectChat = () => {
           getMessages(projectId),
         ]);
         setProject(projRes.data.project);
-        setMessages(msgRes.data.messages);
+        // Normalise every REST message so _id and sender._id are plain strings
+        setMessages((msgRes.data.messages ?? []).map(normaliseMsg));
       } catch (err) {
         const status = err.response?.status;
         if (status === 404) setErrorType('notFound');
@@ -430,7 +446,10 @@ const ProjectChat = () => {
 
     // ── Incoming events ─────────────────────────────────────────────────────
     const onReceiveMessage = ({ message }) => {
-      setMessages(prev => [...prev, message]);
+      // Normalise incoming socket message: convert ObjectIds to plain strings.
+      // This is critical — without normalisation, sender._id may be an ObjectId
+      // instance (not a string), so the isOwn === comparison always fails.
+      setMessages(prev => [...prev, normaliseMsg(message)]);
     };
 
     const onDeleteMessage = ({ messageId }) => {
@@ -657,12 +676,13 @@ const ProjectChat = () => {
                   <DateDivider key={item.id} label={item.label} />
                 ) : (
                   <MessageBubble
-                    key={item._id}
-                    msg={item}
+                    key={item._ref._id}
+                    msg={item._ref}
                     isOwn={
-                      // Compare as strings on both sides — sender._id is an ObjectId string
-                      // from the socket/REST payload; user._id is a string from AuthContext.
-                      item.sender?._id?.toString() === user?._id?.toString()
+                      // Both sides are already plain strings after normaliseMsg().
+                      // Use String() for null-safe comparison.
+                      !!user && !!item._ref.sender &&
+                      String(item._ref.sender._id) === String(user._id)
                     }
                     onDelete={setMsgToDelete}
                   />

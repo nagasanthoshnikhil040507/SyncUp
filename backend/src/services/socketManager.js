@@ -150,9 +150,13 @@ export const initSocket = (httpServer) => {
           message: message.trim(),
         });
 
-        // Use findById + populate (same pattern as message.controller.js)
-        // so the broadcast always contains sender: { _id, name, email }
-        const populated = await Message.findById(doc._id).populate('sender', 'name email');
+        // Use .lean() so Socket.IO receives a guaranteed plain JS object.
+        // Without .lean(), Socket.IO serialises a Mongoose Document via .toJSON(),
+        // which can leave nested ObjectIds (like sender._id) as ObjectId instances
+        // instead of plain strings — breaking the isOwn === check on the frontend.
+        const populated = await Message.findById(doc._id)
+          .populate('sender', 'name email')
+          .lean();
 
         // Broadcast to everyone in the room (including sender)
         io.to(`project:${projectId}`).emit('receive-message', {

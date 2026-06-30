@@ -36,6 +36,9 @@ const messageSchema = new mongoose.Schema(
   },
   {
     timestamps: true, // createdAt + updatedAt
+    // Ensure _id is emitted as a plain string when the document is serialised
+    // by JSON.stringify / Socket.IO broadcast — prevents BSON ObjectId wrapper issues.
+    toJSON: { virtuals: true },
   }
 );
 
